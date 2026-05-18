@@ -1,0 +1,8 @@
+TASK 6: Pod Security
+
+Enforce the Restricted Pod Security Standard on the namespace restricted-ns.
+
+Pods in that namespace cannot:
+- have privileged access
+- host networking
+- have any elevated rights

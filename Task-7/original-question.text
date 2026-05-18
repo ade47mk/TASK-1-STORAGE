@@ -1,0 +1,6 @@
+TASK 7: Taints and Tolerations
+
+On node node-1, add a taint so that no normal pods can schedule there.
+
+Then schedule a Pod on that node by adding the appropriate toleration to the Pod spec
+(and ensure it actually lands on node-1).
