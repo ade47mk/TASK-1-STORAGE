@@ -1,0 +1,6 @@
+TASK 4: Autoscaling
+
+Deploy a sample workload and configure Horizontal Pod Autoscaling for it. Specifically:
+
+Use the existing deployment `cpu-demo`
+Configure an HPA to scale this deployment from 1 up to 5 replicas when the average CPU utilization exceeds 50%.
