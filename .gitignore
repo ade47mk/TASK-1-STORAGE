@@ -1,0 +1,38 @@
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+.scratch/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Kubernetes
+*.kubeconfig
+kubeconfig
+.kube/
+
+# Test data
+test-data/
+tmp/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
