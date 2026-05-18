@@ -1,0 +1,7 @@
+TASK 8: StatefulSets & Headless Services
+
+Deploy a StatefulSet named web with 2 replicas using the NGINX image.
+Each pod should have its own 1Gi persistent volume for /usr/share/nginx/html.
+Ensure that the StatefulSet pods have stable network identities and persistent storage that remains associated with the ordinal index (even if pods are rescheduled).
+
+Create a Headless Service named web to facilitate stable networking for the StatefulSet.
