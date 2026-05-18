@@ -1,0 +1,9 @@
+TASK 3: STORAGE
+Manually create a PersistentVolume that:
+is named static-pv-example
+requests 200Mi
+uses a hostPath on node-1
+access mode ReadWriteOnce
+Retain reclaim policy
+
+Then create a matching PersistentVolumeClaim (static-pvc-example) to bind to it
