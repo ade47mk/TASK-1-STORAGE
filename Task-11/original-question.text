@@ -1,0 +1,5 @@
+TASK 11: Helm
+
+Use Helm to deploy the Traefik Ingress Controller on the cluster.
+Install it in a dedicated namespace traefik with release name traefik.
+Ensure that Traefik's support for the Kubernetes Gateway API is enabled via Helm values.
