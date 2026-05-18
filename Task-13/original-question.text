@@ -1,0 +1,8 @@
+TASK 13: API GATEWAY
+
+Your cluster uses the Gateway API for ingress traffic.
+A service named web-service is running in the default namespace on port 80.
+A Gateway API-compatible controller is already installed, and a GatewayClass named example-gw-class is available in the cluster.
+
+Objective:
+Use Gateway API resources to expose web-service externally on HTTP port 80, routed via the hostname web.example.com.
