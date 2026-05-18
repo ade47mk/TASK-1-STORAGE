@@ -1,0 +1,10 @@
+TASK 1: STORAGE
+A developer needs a persistent volume for an application. Create a PersistentVolumeClaim with:
+
+size 100Mi
+
+access mode ReadWriteOnce
+
+using the storage class "local-path"
+
+Create a Pod that mounts this PVC at /data and verify that the volume is automatically created and mounted.
