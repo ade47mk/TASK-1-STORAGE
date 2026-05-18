@@ -1,11 +1,3 @@
-# Logs
-*.log
-
-# Temporary files
-*.tmp
-*.temp
-.scratch/
-
 # IDE
 .vscode/
 .idea/
@@ -16,11 +8,6 @@
 # OS
 .DS_Store
 Thumbs.db
-
-# Kubernetes
-*.kubeconfig
-kubeconfig
-.kube/
 
 # Test data
 test-data/
