@@ -1,0 +1,5 @@
+TASK 10: CoreDNS Configuration
+
+Cluster workloads need to resolve a custom domain internally. 
+Configure CoreDNS such that any DNS query for `myapp.internal` returns the IP address `10.10.10.10`.
+After configuration, pods in the cluster should be able to resolve `myapp.internal` to `10.10.10.10`.
