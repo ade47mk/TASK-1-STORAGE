@@ -31,7 +31,7 @@ REQUIREMENTS:
 -------------
 
 Part 1: Taint the Node
-  - Node: node-1 (or adjust based on your cluster)
+  - Node: controlplane (or adjust based on your cluster)
   - Taint key: special
   - Taint value: dedicated
   - Effect: NoSchedule
