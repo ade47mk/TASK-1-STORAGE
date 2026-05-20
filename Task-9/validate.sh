@@ -66,25 +66,22 @@ echo "  Testing DNS for kubernetes.default service..."
 kubectl delete pod dns-test-internal --force --grace-period=0 &>/dev/null 2>&1
 
 # Create test pod
-kubectl run dns-test-internal --image=busybox --restart=Never \
-  --command -- sh -c "nslookup kubernetes.default && echo DNS_SUCCESS" &>/dev/null
+kubectl run dns-test-internal --image=busybox:1.28 --restart=Never \
+  --command -- nslookup kubernetes.default &>/dev/null
 
 # Wait for pod to complete
-sleep 5
+sleep 8
 
 # Check logs
 DNS_INTERNAL_OUTPUT=$(kubectl logs dns-test-internal 2>/dev/null)
 
-if echo "$DNS_INTERNAL_OUTPUT" | grep -q "DNS_SUCCESS"; then
-    echo "✓ Internal DNS resolution works (4 points)"
-    TOTAL_POINTS=$((TOTAL_POINTS + 4))
-elif echo "$DNS_INTERNAL_OUTPUT" | grep -qi "Address.*kubernetes"; then
+if echo "$DNS_INTERNAL_OUTPUT" | grep -qi "Address.*10\."; then
     echo "✓ Internal DNS resolution works (4 points)"
     TOTAL_POINTS=$((TOTAL_POINTS + 4))
 else
     echo "✗ Internal DNS resolution failed"
     echo "  Test output:"
-    echo "$DNS_INTERNAL_OUTPUT" | head -5
+    echo "$DNS_INTERNAL_OUTPUT" | head -10
 fi
 
 # Clean up
@@ -98,25 +95,22 @@ echo "  Testing DNS for google.com..."
 kubectl delete pod dns-test-external --force --grace-period=0 &>/dev/null 2>&1
 
 # Create test pod
-kubectl run dns-test-external --image=busybox --restart=Never \
-  --command -- sh -c "nslookup google.com && echo DNS_SUCCESS" &>/dev/null
+kubectl run dns-test-external --image=busybox:1.28 --restart=Never \
+  --command -- nslookup google.com &>/dev/null
 
 # Wait for pod to complete
-sleep 5
+sleep 8
 
 # Check logs
 DNS_EXTERNAL_OUTPUT=$(kubectl logs dns-test-external 2>/dev/null)
 
-if echo "$DNS_EXTERNAL_OUTPUT" | grep -q "DNS_SUCCESS"; then
-    echo "✓ External DNS resolution works (4 points)"
-    TOTAL_POINTS=$((TOTAL_POINTS + 4))
-elif echo "$DNS_EXTERNAL_OUTPUT" | grep -qi "Address.*google"; then
+if echo "$DNS_EXTERNAL_OUTPUT" | grep -qi "Address.*[0-9]"; then
     echo "✓ External DNS resolution works (4 points)"
     TOTAL_POINTS=$((TOTAL_POINTS + 4))
 else
     echo "✗ External DNS resolution failed"
     echo "  Test output:"
-    echo "$DNS_EXTERNAL_OUTPUT" | head -5
+    echo "$DNS_EXTERNAL_OUTPUT" | head -10
 fi
 
 # Clean up

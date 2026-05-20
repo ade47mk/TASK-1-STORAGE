@@ -35,7 +35,7 @@ STEP 1: Confirm DNS is Broken
 Test DNS resolution:
 
 ```bash
-kubectl run test-dns --image=busybox --restart=Never \
+kubectl run test-dns --image=busybox:1.28 --restart=Never \
   -- nslookup kubernetes.default
 ```
 
@@ -167,7 +167,7 @@ STEP 6: Verify DNS is Fixed
 
 Test internal DNS (cluster service):
 ```bash
-kubectl run test-internal --image=busybox --restart=Never \
+kubectl run test-internal --image=busybox:1.28 --restart=Never \
   -- nslookup kubernetes.default
 ```
 
@@ -187,7 +187,7 @@ Address 1: 10.96.0.1 kubernetes.default.svc.cluster.local
 
 Test external DNS:
 ```bash
-kubectl run test-external --image=busybox --restart=Never \
+kubectl run test-external --image=busybox:1.28 --restart=Never \
   -- nslookup google.com
 ```
 
@@ -382,11 +382,11 @@ kubectl get configmap coredns -n kube-system
 kubectl describe configmap coredns -n kube-system
 
 # Test DNS
-kubectl run test --image=busybox --restart=Never -- nslookup kubernetes.default
+kubectl run test --image=busybox:1.28 --restart=Never -- nslookup kubernetes.default
 kubectl logs test
 
 # Interactive DNS test
-kubectl run -it --rm debug --image=busybox --restart=Never -- sh
+kubectl run -it --rm debug --image=busybox:1.28 --restart=Never -- sh
 # Inside pod:
 # nslookup kubernetes.default
 # nslookup google.com
@@ -412,7 +412,7 @@ If empty: CoreDNS pods not ready or service selector wrong.
 
 Check pod DNS configuration:
 ```bash
-kubectl run test --image=busybox --restart=Never --command -- sleep 3600
+kubectl run test --image=busybox:1.28 --restart=Never --command -- sleep 3600
 kubectl exec test -- cat /etc/resolv.conf
 ```
 

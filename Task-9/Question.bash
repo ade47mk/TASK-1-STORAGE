@@ -45,7 +45,7 @@ Expected Outcome:
 TASKS:
 ------
 1. Test DNS to confirm it's broken:
-   kubectl run test-dns --image=busybox --restart=Never \
+   kubectl run test-dns --image=busybox:1.28 --restart=Never \
      -- nslookup kubernetes.default
 
 2. Check CoreDNS status:
@@ -62,7 +62,7 @@ TASKS:
 5. Fix the identified issues
 
 6. Verify DNS is working:
-   kubectl run test-dns --image=busybox --restart=Never \
+   kubectl run test-dns --image=busybox:1.28 --restart=Never \
      -- nslookup kubernetes.default
 
 VERIFICATION:
@@ -98,11 +98,11 @@ HINTS:
   kubectl scale deployment coredns -n kube-system --replicas=2
 
 - Test DNS from a pod:
-  kubectl run -it --rm debug --image=busybox --restart=Never \
+  kubectl run -it --rm debug --image=busybox:1.28 --restart=Never \
     -- nslookup kubernetes.default
 
 - Test external DNS:
-  kubectl run -it --rm debug --image=busybox --restart=Never \
+  kubectl run -it --rm debug --image=busybox:1.28 --restart=Never \
     -- nslookup google.com
 
 DELIVERABLES:
