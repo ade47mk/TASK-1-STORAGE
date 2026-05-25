@@ -6,7 +6,9 @@
 
 ## 🎯 Scenario
 
-DNS lookups are failing in the Kubernetes cluster. Pods cannot resolve external DNS names, and developers are reporting that their applications cannot connect to external services. You need to investigate and repair CoreDNS.
+The cluster's DNS service (CoreDNS) has completely failed with pods in **CrashLoopBackOff** state. CoreDNS containers are failing to start due to a **Corefile syntax error** - specifically a typo where `kubernetezz` is used instead of `kubernetes`. You need to identify the error from logs and fix the configuration.
+
+**Error:** `/etc/coredns/Corefile:7 - Error during parsing: Unknown directive 'kubernetezz'`
 
 ## 📋 Files
 
@@ -29,8 +31,9 @@ TASK-9-COREDNS/
 
 This will:
 - Verify cluster connectivity
-- Create a misconfigured CoreDNS ConfigMap (invalid upstream DNS servers)
-- Restart CoreDNS pods to apply the broken config
+- Backup the original CoreDNS ConfigMap
+- Create a broken CoreDNS ConfigMap with a **typo: 'kubernetezz'** instead of 'kubernetes'
+- Restart CoreDNS pods (they will enter **CrashLoopBackOff** state)
 - Create a test pod for DNS verification
 
 ### 2. Read the Question
@@ -49,20 +52,24 @@ or simply:
 
 **Key Investigation Steps:**
 
-1. Check CoreDNS pod status:
+1. Check CoreDNS pod status (will show CrashLoopBackOff):
    ```bash
    kubectl get pods -n kube-system -l k8s-app=kube-dns
    ```
 
-2. Check CoreDNS logs:
+2. **Check logs for the exact error (MOST IMPORTANT!):**
    ```bash
    kubectl logs -n kube-system -l k8s-app=kube-dns
    ```
+   
+   You'll see: `/etc/coredns/Corefile:7 - Error during parsing: Unknown directive 'kubernetezz'`
 
-3. Examine CoreDNS configuration:
+3. Examine CoreDNS configuration (look for the typo):
    ```bash
    kubectl get configmap coredns -n kube-system -o yaml
    ```
+   
+   Line 7 will have: `kubernetezz cluster.local ...` (should be `kubernetes`)
 
 4. Test DNS resolution:
    ```bash
@@ -87,13 +94,16 @@ The validation script will check:
 <details>
 <summary>Click to reveal hints</summary>
 
-1. The problem is in the CoreDNS ConfigMap's **forward directive**
-2. Look for invalid upstream DNS servers (1.2.3.4, 5.6.7.8)
-3. Replace them with valid options:
-   - `/etc/resolv.conf` (use node's DNS)
-   - `8.8.8.8 8.8.4.4` (Google DNS)
-   - `1.1.1.1 1.0.0.1` (Cloudflare DNS)
-4. After fixing the ConfigMap, restart CoreDNS pods:
+1. **CrashLoopBackOff means the container keeps crashing** - check logs first!
+2. The error message shows **line 7** has the problem
+3. Look for **"Unknown directive 'kubernetezz'"** in the logs
+4. It's a **TYPO**: 'kubernetezz' should be 'kubernetes'
+5. Fix the typo in the ConfigMap:
+   ```bash
+   kubectl edit configmap coredns -n kube-system
+   # Change 'kubernetezz' to 'kubernetes'
+   ```
+6. After fixing, **restart the pods**:
    ```bash
    kubectl delete pods -n kube-system -l k8s-app=kube-dns
    ```
@@ -139,21 +149,27 @@ After completing this task, you will understand:
 If you're stuck, here's the fastest way to fix CoreDNS:
 
 ```bash
-# Edit the ConfigMap
+# 1. Check logs to confirm the error
+kubectl logs -n kube-system -l k8s-app=kube-dns
+
+# 2. Edit the ConfigMap
 kubectl edit configmap coredns -n kube-system
 
-# Find this line:
-#   forward . 1.2.3.4 5.6.7.8
-# Replace with:
-#   forward . /etc/resolv.conf
+# Find line 7:
+#   kubernetezz cluster.local in-addr.arpa ip6.arpa {
+# Change to:
+#   kubernetes cluster.local in-addr.arpa ip6.arpa {
 
-# Save and exit, then restart CoreDNS:
+# Save and exit (:wq)
+
+# 3. Restart CoreDNS pods
 kubectl delete pods -n kube-system -l k8s-app=kube-dns
 
-# Wait for pods to restart:
+# 4. Wait for pods to be ready
 kubectl wait --for=condition=ready pod -l k8s-app=kube-dns -n kube-system --timeout=60s
 
-# Verify:
+# 5. Verify DNS works
+kubectl exec dns-test -- nslookup kubernetes.default
 kubectl exec dns-test -- nslookup google.com
 ```
 

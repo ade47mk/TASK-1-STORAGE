@@ -1,2 +1,60 @@
-TASK 9: CoreDNS Troubleshooting
-DNS lookups are failing in the cluster. Investigate and repair CoreDNS.
+TASK 9: CoreDNS Troubleshooting - CrashLoopBackOff
+
+Scenario:
+The cluster's DNS service (CoreDNS) has completely failed. The CoreDNS pods are in CrashLoopBackOff state (0/1 Ready), and all DNS resolution in the cluster is broken. This is a critical production issue that must be fixed immediately!
+
+Symptoms:
+- CoreDNS pods show STATUS: CrashLoopBackOff
+- CoreDNS pods show READY: 0/1 (containers failing to start)
+- CoreDNS pods have high RESTART counts (5+)
+- kubectl logs shows: "Error during parsing: Unknown directive 'kubernetezz'"
+- All DNS resolution fails (both internal and external)
+
+Root Cause:
+The CoreDNS ConfigMap contains a Corefile with a TYPO. On line 7, the directive is misspelled as 'kubernetezz' instead of the correct 'kubernetes'. This causes CoreDNS to fail parsing and crash immediately on startup.
+
+Objective:
+Investigate why CoreDNS pods are crashing, identify the configuration error, fix the typo in the ConfigMap, and restore DNS functionality. The CoreDNS pods must reach Running state (1/1 Ready) and DNS resolution must work for both internal services and external domains.
+
+Requirements:
+1. CoreDNS pods must be Running (not CrashLoopBackOff)
+2. CoreDNS pods must be 1/1 Ready
+3. External DNS resolution must work (e.g., google.com)
+4. Internal cluster DNS must work (e.g., kubernetes.default)
+5. CoreDNS logs must be clean (no parsing errors)
+
+Tasks:
+1. Check CoreDNS pod status to confirm CrashLoopBackOff
+2. Check CoreDNS logs to identify the exact error message
+3. Identify the line number and typo in the Corefile
+4. Edit the CoreDNS ConfigMap to fix the typo ('kubernetezz' → 'kubernetes')
+5. Delete CoreDNS pods to apply the fix
+6. Verify pods reach Running state (1/1 Ready)
+7. Test DNS resolution for both internal and external domains
+
+Investigation Steps:
+- kubectl get pods -n kube-system -l k8s-app=kube-dns
+- kubectl logs -n kube-system -l k8s-app=kube-dns
+- kubectl describe pod -n kube-system -l k8s-app=kube-dns
+- kubectl get configmap coredns -n kube-system -o yaml
+
+Fix:
+- kubectl edit configmap coredns -n kube-system
+- Change 'kubernetezz' to 'kubernetes' on line 7
+- kubectl delete pods -n kube-system -l k8s-app=kube-dns
+
+Validation:
+- kubectl get pods -n kube-system -l k8s-app=kube-dns (should show 1/1 Running)
+- kubectl exec dns-test -- nslookup kubernetes.default (should resolve)
+- kubectl exec dns-test -- nslookup google.com (should resolve)
+
+Difficulty: Hard
+Points: 20
+Time Estimate: 15-20 minutes
+
+Key Learning:
+- CrashLoopBackOff indicates container startup failures
+- Always check logs first to identify exact errors
+- Typos in configuration files are common CKA exam scenarios
+- ConfigMap changes require pod restarts to take effect
+- Verify both internal and external DNS after fixes

@@ -25,11 +25,21 @@ else
     exit 1
 fi
 
-# Check 2: CoreDNS pods are running (3 points)
-echo "Check 2: Are CoreDNS pods running?"
+# Check 2: CoreDNS pods are NOT in CrashLoopBackOff (3 points)
+echo "Check 2: Are CoreDNS pods running (not crashing)?"
+CRASH_PODS=$(kubectl get pods -n kube-system -l k8s-app=kube-dns --no-headers 2>/dev/null | grep -c "CrashLoopBackOff\|Error")
 RUNNING_PODS=$(kubectl get pods -n kube-system -l k8s-app=kube-dns --no-headers 2>/dev/null | grep -c "Running")
-if [ "$RUNNING_PODS" -gt 0 ]; then
-    echo "✓ CoreDNS pods are running ($RUNNING_PODS/$COREDNS_PODS) (3 points)"
+
+if [ "$CRASH_PODS" -gt 0 ]; then
+    echo "✗ CoreDNS pods are still crashing ($CRASH_PODS pods in CrashLoopBackOff/Error)"
+    echo "  Check logs: kubectl logs -n kube-system -l k8s-app=kube-dns"
+    echo "  Fix the Corefile syntax error in the CoreDNS ConfigMap"
+    kubectl get pods -n kube-system -l k8s-app=kube-dns
+    echo ""
+    echo "TOTAL SCORE: $TOTAL_POINTS/$MAX_POINTS"
+    exit 1
+elif [ "$RUNNING_PODS" -gt 0 ]; then
+    echo "✓ CoreDNS pods are running ($RUNNING_PODS/$COREDNS_PODS - no crashes) (3 points)"
     TOTAL_POINTS=$((TOTAL_POINTS + 3))
 else
     echo "✗ CoreDNS pods are not running"
