@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Task 9: CoreDNS Troubleshooting
-# Difficulty: Medium
+# Difficulty: Hard
 # Points: 20
-# Time: 10-15 minutes
+# Time: 15-20 minutes
 
 cat << 'EOF'
 
@@ -11,162 +11,115 @@ cat << 'EOF'
   TASK 9: CoreDNS Troubleshooting
 ════════════════════════════════════════════════════════════════
 
-Difficulty: Medium
+Difficulty: Hard
 Points: 20
-Time Estimate: 10-15 minutes
+Time Estimate: 15-20 minutes
 
 SCENARIO:
 ---------
-DNS lookups are failing in the cluster. Applications cannot
-resolve service names or external domains. You need to identify
-and fix the CoreDNS issues.
+The cluster's DNS service (CoreDNS) is experiencing failures. Pods
+cannot resolve external DNS names, and developers are reporting that
+their applications cannot connect to external services.
+
+You need to investigate the issue and restore DNS functionality.
+
+SYMPTOMS:
+---------
+- Pods cannot resolve external DNS names (e.g., google.com, github.com)
+- Internal cluster DNS might work partially
+- CoreDNS pods are running but not functioning correctly
+- Applications fail to connect to external APIs
 
 OBJECTIVE:
 ----------
-Troubleshoot and repair CoreDNS to restore DNS functionality
+Investigate and repair CoreDNS to restore DNS resolution functionality
 in the cluster.
 
 REQUIREMENTS:
 -------------
+1. CoreDNS pods must be running and healthy
+2. External DNS resolution must work from pods
+3. Internal cluster DNS must work correctly
+4. No downtime for running applications
 
-Investigation Steps:
-  1. Test DNS resolution from a pod
-  2. Check CoreDNS pod status
-  3. Check CoreDNS deployment
-  4. Review CoreDNS logs
-  5. Identify and fix the issue(s)
+INVESTIGATION STEPS:
+--------------------
+1. Check CoreDNS pod status:
+   kubectl get pods -n kube-system -l k8s-app=kube-dns
 
-Expected Outcome:
-  - CoreDNS pods running and healthy
-  - DNS resolution working for services
-  - DNS resolution working for external domains
-  - At least 2 CoreDNS replicas running
+2. Check CoreDNS logs:
+   kubectl logs -n kube-system -l k8s-app=kube-dns
+
+3. Examine CoreDNS configuration:
+   kubectl get configmap coredns -n kube-system -o yaml
+
+4. Test DNS resolution from a pod:
+   kubectl exec dns-test -- nslookup kubernetes.default
+   kubectl exec dns-test -- nslookup google.com
+
+COMMON ISSUES TO CHECK:
+-----------------------
+- Invalid upstream DNS servers in CoreDNS ConfigMap
+- Incorrect CoreDNS Corefile syntax
+- Network policies blocking DNS traffic
+- CoreDNS service not configured correctly
+- Missing or incorrect DNS endpoints
 
 TASKS:
 ------
-1. Test DNS to confirm it's broken:
-   kubectl run test-dns --image=busybox:1.28 --restart=Never \
-     -- nslookup kubernetes.default
+1. Identify why DNS lookups are failing
+2. Fix the CoreDNS configuration
+3. Restart CoreDNS pods if necessary
+4. Verify DNS resolution works for:
+   - Internal cluster services (kubernetes.default)
+   - External domains (google.com, github.com)
 
-2. Check CoreDNS status:
-   kubectl get pods -n kube-system -l k8s-app=coredns
+HINTS:
+------
+- Check the 'forward' directive in CoreDNS Corefile
+- Valid upstream DNS servers: /etc/resolv.conf or 8.8.8.8
+- After fixing ConfigMap, you may need to restart CoreDNS pods:
+  kubectl delete pods -n kube-system -l k8s-app=kube-dns
 
-3. Investigate the deployment:
-   kubectl get deployment coredns -n kube-system
+- Test DNS from the test pod:
+  kubectl exec dns-test -- nslookup kubernetes.default
+  kubectl exec dns-test -- nslookup google.com
 
-4. Check for issues:
-   - Are pods running?
-   - Are there enough replicas?
-   - Any errors in logs?
-
-5. Fix the identified issues
-
-6. Verify DNS is working:
-   kubectl run test-dns --image=busybox:1.28 --restart=Never \
-     -- nslookup kubernetes.default
+- CoreDNS ConfigMap location:
+  configmap/coredns in namespace kube-system
 
 VERIFICATION:
 -------------
 Your solution should meet these criteria:
-- CoreDNS deployment exists in kube-system
-- At least 2 CoreDNS pods running
-- CoreDNS pods are in Running state
-- DNS resolution works for cluster services
-- DNS resolution works for external domains
-
-HINTS:
-------
-- CoreDNS runs in kube-system namespace
-- Common issues:
-  * Pods scaled to 0 replicas
-  * Pods in CrashLoopBackOff
-  * Missing or corrupted ConfigMap
-  * Resource constraints
-  * Network policy blocking traffic
-
-- Check CoreDNS pods:
-  kubectl get pods -n kube-system -l k8s-app=coredns
-
-- Check CoreDNS deployment:
-  kubectl get deployment coredns -n kube-system
-  kubectl describe deployment coredns -n kube-system
-
-- View CoreDNS logs:
-  kubectl logs -n kube-system -l k8s-app=coredns
-
-- Scale CoreDNS:
-  kubectl scale deployment coredns -n kube-system --replicas=2
-
-- Test DNS from a pod:
-  kubectl run -it --rm debug --image=busybox:1.28 --restart=Never \
-    -- nslookup kubernetes.default
-
-- Test external DNS:
-  kubectl run -it --rm debug --image=busybox:1.28 --restart=Never \
-    -- nslookup google.com
+- CoreDNS pods are running and ready
+- External DNS resolution works (e.g., google.com)
+- Internal cluster DNS works (e.g., kubernetes.default)
+- No errors in CoreDNS logs related to upstream servers
 
 DELIVERABLES:
 -------------
-- CoreDNS deployment healthy
-- At least 2 CoreDNS replicas running
-- DNS resolution functional
+- Fixed CoreDNS ConfigMap
+- CoreDNS pods running and healthy
+- DNS resolution working for both internal and external domains
 
 SCORING:
 --------
-- CoreDNS deployment exists: 3 points
-- CoreDNS has 2+ replicas: 4 points
-- CoreDNS pods are Running: 5 points
-- Internal DNS works: 4 points
-- External DNS works: 4 points
+- Identified the DNS issue: 4 points
+- Fixed CoreDNS ConfigMap: 6 points
+- Restarted CoreDNS pods (if needed): 2 points
+- External DNS resolution works: 4 points
+- Internal DNS resolution works: 3 points
+- Clean CoreDNS logs (no errors): 1 point
 
 Total: 20 points
-Passing: 14 points
+Passing: 16 points
 
 ════════════════════════════════════════════════════════════════
 
-COMMON DNS ISSUES:
-------------------
-1. Scaled to 0 replicas
-   - Fix: kubectl scale deployment coredns -n kube-system --replicas=2
-
-2. Pods CrashLoopBackOff
-   - Check logs: kubectl logs -n kube-system <coredns-pod>
-   - Check ConfigMap: kubectl get cm coredns -n kube-system
-
-3. Insufficient resources
-   - Check node resources
-   - Adjust resource requests/limits
-
-4. Network issues
-   - Check kube-proxy
-   - Check network plugin (CNI)
-
-5. ConfigMap corruption
-   - Verify Corefile syntax
-   - Restore from backup if needed
-
-IMPORTANT NOTES:
-----------------
-• CoreDNS is the default DNS in Kubernetes 1.13+
-• Runs as deployment in kube-system namespace
-• Uses ConfigMap "coredns" for configuration
-• Exposed via Service "kube-dns" (historical name)
-• Critical for service discovery
-• Required for many cluster operations
-
-DNS RESOLUTION FLOW:
---------------------
-1. Pod makes DNS query
-2. Query sent to CoreDNS service (10.96.0.10 typically)
-3. CoreDNS checks query type
-4. For cluster services: returns ClusterIP
-5. For external: forwards to upstream DNS
-6. Response returned to pod
-
 VALIDATION:
-Run ./validate.sh when complete to check your work.
+Run ./Task-9/validate.sh when complete to check your work.
 
-Need help? Check SolutionNotes.bash for detailed guidance.
+Need help? Check Task-9/SolutionNotes.bash for step-by-step solution.
 
 Good luck! 🚀
 
