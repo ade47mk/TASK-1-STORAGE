@@ -77,20 +77,22 @@ HINTS:
 ------
 - CoreDNS config is in ConfigMap "coredns" in kube-system
 
-- Add hosts plugin to Corefile:
+- Add hosts plugin to Corefile (AFTER the kubernetes plugin):
   ```
   .:53 {
       errors
-      health
-      ready
-      hosts {
-          10.10.10.10 myapp.internal
-          fallthrough
+      health {
+          lameduck 5s
       }
+      ready
       kubernetes cluster.local in-addr.arpa ip6.arpa {
          pods insecure
          fallthrough in-addr.arpa ip6.arpa
          ttl 30
+      }
+      hosts {
+          10.10.10.10 myapp.internal
+          fallthrough
       }
       # ... rest of config
   }
@@ -150,10 +152,14 @@ Common plugins in order:
 1. errors - Error logging
 2. health - Health check endpoint
 3. ready - Readiness endpoint
-4. hosts - Custom DNS entries (add this!)
-5. kubernetes - K8s service DNS
-6. forward - External DNS forwarding
-7. cache - Response caching
+4. kubernetes - K8s service DNS
+5. hosts - Custom DNS entries (add this AFTER kubernetes!)
+6. prometheus - Prometheus metrics
+7. forward - External DNS forwarding
+8. cache - Response caching
+9. loop - Loop detection
+10. reload - Config reload
+11. loadbalance - Load balancing
 
 HOSTS PLUGIN SYNTAX:
 --------------------

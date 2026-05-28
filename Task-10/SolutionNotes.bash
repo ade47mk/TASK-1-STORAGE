@@ -86,7 +86,7 @@ This opens your default editor (usually vi or nano).
 STEP 3: Add hosts Plugin
 -------------------------
 
-Add the hosts plugin AFTER the `ready` plugin and BEFORE the `kubernetes` plugin.
+Add the hosts plugin AFTER the `kubernetes` plugin.
 
 **Modified Corefile:**
 
@@ -99,20 +99,23 @@ data:
            lameduck 5s
         }
         ready
-        hosts {
-            10.10.10.10 myapp.internal
-            fallthrough
-        }
         kubernetes cluster.local in-addr.arpa ip6.arpa {
            pods insecure
            fallthrough in-addr.arpa ip6.arpa
            ttl 30
         }
+        hosts {
+            10.10.10.10 myapp.internal
+            fallthrough
+        }
         prometheus :9153
         forward . /etc/resolv.conf {
            max_concurrent 1000
         }
-        cache 30
+        cache 30 {
+           disable success cluster.local
+           disable denial cluster.local
+        }
         loop
         reload
         loadbalance
@@ -124,7 +127,8 @@ Key points:
 1. **hosts { }** - Plugin block
 2. **10.10.10.10 myapp.internal** - IP then hostname
 3. **fallthrough** - Continue to next plugin if no match
-4. **Indentation** - Must be consistent (spaces, usually 4 or 2)
+4. **Position** - AFTER kubernetes plugin, BEFORE prometheus
+5. **Indentation** - Must be consistent (spaces, usually 4 or 2)
 
 Save and exit:
 - vi: Press `Esc`, then `:wq`, then `Enter`
@@ -268,8 +272,8 @@ hosts /etc/coredns/custom.hosts {
    - Both names resolve to same IP
 
 3. **Order matters**
-   - Place hosts plugin early in chain
-   - After ready, before kubernetes
+   - Place hosts plugin AFTER kubernetes plugin
+   - Before prometheus and forward
 
 ALTERNATIVE: Using hosts File
 ------------------------------
@@ -445,20 +449,23 @@ data:
            lameduck 5s
         }
         ready
-        hosts {
-            10.10.10.10 myapp.internal
-            fallthrough
-        }
         kubernetes cluster.local in-addr.arpa ip6.arpa {
            pods insecure
            fallthrough in-addr.arpa ip6.arpa
            ttl 30
         }
+        hosts {
+            10.10.10.10 myapp.internal
+            fallthrough
+        }
         prometheus :9153
         forward . /etc/resolv.conf {
            max_concurrent 1000
         }
-        cache 30
+        cache 30 {
+           disable success cluster.local
+           disable denial cluster.local
+        }
         loop
         reload
         loadbalance
@@ -474,7 +481,7 @@ kubectl rollout restart deployment coredns -n kube-system
 EXAM TIPS
 ---------
 1. Backup ConfigMap before editing
-2. Add hosts plugin after ready, before kubernetes
+2. Add hosts plugin AFTER kubernetes plugin, BEFORE prometheus
 3. Syntax: IP then hostname
 4. Always include fallthrough
 5. Reload CoreDNS after changes
@@ -499,7 +506,7 @@ Commands:
 # Edit CoreDNS config
 kubectl edit configmap coredns -n kube-system
 
-# Add this to Corefile (after ready plugin):
+# Add this to Corefile (AFTER kubernetes plugin):
 # hosts {
 #     10.10.10.10 myapp.internal
 #     fallthrough
